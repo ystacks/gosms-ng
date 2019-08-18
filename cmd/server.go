@@ -1,3 +1,10 @@
+/**
+ * File              : server.go
+ * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
+ * Date              : 10.08.2019
+ * Last Modified Date: 12.08.2019
+ * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
+ */
 /*
 Copyright © 2019 Jiang Yitao <jiangyt.cn#gmail.com>
 
@@ -16,9 +23,19 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/spf13/cobra"
+	. "github.com/ystacks/gosms-ng/logger"
+	"github.com/ystacks/gosms-ng/pkg/api"
+	"github.com/ystacks/gosms-ng/pkg/controller"
+	"github.com/ystacks/gosms-ng/pkg/controller/modem"
+	"go.uber.org/zap"
 )
 
 // serverCmd represents the server command
@@ -32,7 +49,42 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("server called")
+
+		r := api.Routes()
+
+		stopCh := make(chan struct{})
+
+		srv := &http.Server{
+			Addr:    fmt.Sprintf("0.0.0.0:%v", 8080),
+			Handler: r,
+		}
+
+		var smsCtr controller.Controller
+
+		smsCtr = &modem.SMSController{}
+
+		go smsCtr.Run(stopCh, 10)
+
+		go func() {
+			if err := srv.ListenAndServe(); err != nil {
+				Logger.Fatal("failed to start µ-service for gosms-ng", zap.Int("port", 8080))
+			}
+		}()
+
+		Logger.Info("µ-service for gosms-ng is running", zap.Int("port", 8080))
+
+		sig := make(chan os.Signal)
+		signal.Notify(sig, os.Interrupt)
+		<-sig
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			Logger.Warn(fmt.Sprintf("Server Shutdown: %#v", err))
+		} else {
+			stopCh <- struct{}{}
+			Logger.Info("Shutting down gosms-ng µ-service")
+		}
 	},
 }
 
