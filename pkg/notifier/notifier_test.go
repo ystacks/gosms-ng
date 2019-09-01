@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/ystacks/gosms-ng/pkg/models"
-	. "github.com/ystacks/gosms-ng/pkg/notifier"
+	"github.com/jiangytcn/gosms-ng/pkg/models"
+	. "github.com/jiangytcn/gosms-ng/pkg/notifier"
 )
 
 func TestSMSEmailNotification(t *testing.T) {

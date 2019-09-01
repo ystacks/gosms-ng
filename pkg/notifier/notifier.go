@@ -2,7 +2,7 @@
  * File              : notifier.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 17.08.2019
- * Last Modified Date: 19.08.2019
+ * Last Modified Date: 20.08.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 package notifier
@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/ystacks/gosms-ng/config"
-	. "github.com/ystacks/gosms-ng/logger"
-	"github.com/ystacks/gosms-ng/pkg/models"
+	"github.com/jiangytcn/gosms-ng/config"
+	. "github.com/jiangytcn/gosms-ng/logger"
+	"github.com/jiangytcn/gosms-ng/pkg/models"
 	"go.uber.org/zap"
 )
 
@@ -49,8 +49,13 @@ func (ns *NotificationService) Run() error {
 			if err == nil {
 				if err = message.GenericSend(); err != nil {
 					Logger.Error("SMS Sent failed", zap.Error(err))
+				} else {
+					Logger.Info("SMS Sent succeed")
 				}
+			} else {
+				Logger.Error("SMS build failed", zap.Error(err))
 			}
+
 		case webhook := <-ns.webhookQueue:
 			fmt.Println("got webhook, pending s")
 			webhook.WebRequestSend()
@@ -105,10 +110,10 @@ Yitao
 		Subject: subject,
 		Body:    buffer.String(),
 		SMTPCfg: config.SMTPConfig{
-			Server:      "smtp.163.com",
+			Server:      "smtp.sendgrid.net",
 			Port:        465,
-			User:        "jiangytcn@163.com",
-			Password:    "changeit",
+			User:        "apikey",
+			Password:    "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",
 			FromName:    "Jiang Yi Tao",
 			FromAddress: "jiangytcn@163.com",
 		},

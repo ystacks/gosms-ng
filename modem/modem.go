@@ -41,10 +41,10 @@ func (m *GSMModem) Connect() (err error) {
 }
 
 func (m *GSMModem) initModem() {
-	m.SendCommand("ATE0\r\n", true)      // echo off
-	m.SendCommand("AT+CMEE=1\r\n", true) // useful error messages
-	m.SendCommand("AT+WIND=0\r\n", true) // disable notifications
-	m.SendCommand("AT+CMGF=1\r\n", true) // switch to TEXT mode
+	m.SendCommand("ATE0\r\n", false)      // echo off
+	m.SendCommand("AT+CMEE=1\r\n", false) // useful error messages
+	m.SendCommand("AT+WIND=0\r\n", false) // disable notifications
+	m.SendCommand("AT+CMGF=1\r\n", false) // switch to TEXT mode
 }
 
 func (m *GSMModem) Expect(possibilities []string) (string, error) {
@@ -89,18 +89,19 @@ func (m *GSMModem) Send(command string) {
 	}
 }
 
-func (m *GSMModem) Read(n int) string {
-	var output string = ""
+func (m *GSMModem) Read(n int) []string {
+	var output []string
 	buf := make([]byte, n)
-	for i := 0; i < n; i++ {
-		// ignoring error as EOF raises error on Linux
+	for {
 		c, _ := m.Port.Read(buf)
 		if c > 0 {
-			output = string(buf[:c])
+			log.Printf("--- Read(%d): %v", n, m.transposeLog(string(buf[:c])))
+			output = append(output, string(buf[:c]))
+		} else {
+			break
 		}
 	}
 
-	log.Printf("--- Read(%d): %v", n, m.transposeLog(output))
 	return output
 }
 
@@ -111,7 +112,7 @@ func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
 		output, _ := m.Expect([]string{"OK\r\n", "ERROR\r\n"}) // we will not change api so errors are ignored for now
 		return output
 	} else {
-		return m.Read(1)
+		return m.Read(1)[0]
 	}
 }
 
@@ -125,12 +126,12 @@ func (m *GSMModem) SendSMS(mobile string, message string) string {
 	return m.SendCommand(message+string(26), true)
 }
 
-func (m *GSMModem) ReadSMSs() string {
+func (m *GSMModem) ReadSMSs() []string {
 	log.Println("--- Read All SMS start.")
 
 	m.Send("AT+CMGL=\"ALL\"\r\n")
 	smsStr := m.Read(1024)
-	log.Println("--- Read All SMS end ", smsStr)
+	log.Println("--- Read All SMS end.")
 	return smsStr
 }
 

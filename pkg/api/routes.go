@@ -2,7 +2,7 @@
  * File              : routes.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 11.08.2019
- * Last Modified Date: 11.08.2019
+ * Last Modified Date: 01.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 package api
@@ -14,16 +14,16 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	. "github.com/jiangytcn/gosms-ng/logger"
+	"github.com/jiangytcn/gosms-ng/pkg/api/config"
+	"github.com/jiangytcn/gosms-ng/pkg/api/sms"
 	"github.com/rs/cors"
-	. "github.com/ystacks/gosms-ng/logger"
-	"github.com/ystacks/gosms-ng/pkg/api/config"
-	"github.com/ystacks/gosms-ng/pkg/api/sms"
 	"go.uber.org/zap"
 )
 
-func Routes() *chi.Mux {
+func Routes() chi.Router {
 
-	r := chi.NewMux()
+	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -41,12 +41,6 @@ func Routes() *chi.Mux {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	})
 	r.Use(cors.Handler)
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			//ctx := context.WithValue(req.Context(), utils.ContextDBName, tx)
-			//next.ServeHTTP(w, req.WithContext(ctx))
-		})
-	})
 
 	r.Use(middleware.Timeout(60 * time.Second))
 

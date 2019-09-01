@@ -13,7 +13,7 @@ import (
 
 	gomail "gopkg.in/mail.v2"
 
-	"github.com/ystacks/gosms-ng/config"
+	"github.com/jiangytcn/gosms-ng/config"
 )
 
 type Message struct {

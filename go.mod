@@ -1,4 +1,4 @@
-module github.com/ystacks/gosms-ng
+module github.com/jiangytcn/gosms-ng
 
 go 1.12
 

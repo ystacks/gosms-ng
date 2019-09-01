@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/ystacks/gosms-ng/cmd"
+import "github.com/jiangytcn/gosms-ng/cmd"
 
 func main() {
   cmd.Execute()

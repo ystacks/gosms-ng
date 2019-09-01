@@ -2,7 +2,7 @@
  * File              : server.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 10.08.2019
- * Last Modified Date: 12.08.2019
+ * Last Modified Date: 01.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 /*
@@ -30,11 +30,9 @@ import (
 	"os/signal"
 	"time"
 
+	. "github.com/jiangytcn/gosms-ng/logger"
+	"github.com/jiangytcn/gosms-ng/pkg/api"
 	"github.com/spf13/cobra"
-	. "github.com/ystacks/gosms-ng/logger"
-	"github.com/ystacks/gosms-ng/pkg/api"
-	"github.com/ystacks/gosms-ng/pkg/controller"
-	"github.com/ystacks/gosms-ng/pkg/controller/modem"
 	"go.uber.org/zap"
 )
 
@@ -55,15 +53,15 @@ to quickly create a Cobra application.`,
 		stopCh := make(chan struct{})
 
 		srv := &http.Server{
-			Addr:    fmt.Sprintf("0.0.0.0:%v", 8080),
+			Addr:    fmt.Sprintf("0.0.0.0:%v", 18080),
 			Handler: r,
 		}
 
-		var smsCtr controller.Controller
-
-		smsCtr = &modem.SMSController{}
-
-		go smsCtr.Run(stopCh, 10)
+		/*
+			var smsCtr controller.Controller
+			smsCtr = &modem.SMSController{}
+			go smsCtr.Run(stopCh, 10)
+		*/
 
 		go func() {
 			if err := srv.ListenAndServe(); err != nil {
@@ -71,7 +69,7 @@ to quickly create a Cobra application.`,
 			}
 		}()
 
-		Logger.Info("µ-service for gosms-ng is running", zap.Int("port", 8080))
+		Logger.Info("µ-service for gosms-ng is running", zap.Int("port", 18080))
 
 		sig := make(chan os.Signal)
 		signal.Notify(sig, os.Interrupt)

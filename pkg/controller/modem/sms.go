@@ -10,7 +10,7 @@ package modem
 import (
 	"sync"
 
-	. "github.com/ystacks/gosms-ng/logger"
+	. "github.com/jiangytcn/gosms-ng/logger"
 	"go.uber.org/zap"
 )
 

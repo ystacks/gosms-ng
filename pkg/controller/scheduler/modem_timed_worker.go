@@ -10,7 +10,7 @@ package scheduler
 import (
 	"fmt"
 
-	"github.com/ystacks/gosms-ng/modem"
+	"github.com/jiangytcn/gosms-ng/modem"
 )
 
 type ModemWorker struct {
