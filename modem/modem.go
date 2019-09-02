@@ -10,6 +10,7 @@ package modem
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -58,20 +59,28 @@ func (m *GSMModem) Expect(possibilities []string) (string, error) {
 
 	readMax = readMax + 2 // we need offset for \r\n sent by modem
 
+	var output []string
 	var status string = ""
 	buf := make([]byte, readMax)
 
-	for i := 0; i < readMax; i++ {
-		// ignoring error as EOF raises error on Linux
-		n, _ := m.Port.Read(buf)
-		if n > 0 {
-			status = string(buf[:n])
+	for {
+		c, _ := m.Port.Read(buf)
+		if c > 0 {
+			output = append(output, string(buf[:c]))
+		} else {
+			break
+		}
+	}
 
-			for _, possibility := range possibilities {
-				if strings.HasSuffix(status, possibility) {
-					log.Println("--- Expect:", m.transposeLog(strings.Join(possibilities, "|")), "Got:", m.transposeLog(status))
-					return status, nil
-				}
+	status = strings.Join(output, "")
+
+	status = strings.Trim(strings.TrimSpace(status), "\"")
+
+	if len(status) > 0 {
+		for _, possibility := range possibilities {
+			if strings.HasSuffix(status, possibility) {
+				log.Println("--- Expect:", m.transposeLog(strings.Join(possibilities, "|")), "Got:", m.transposeLog(status))
+				return status, nil
 			}
 		}
 	}
@@ -95,7 +104,6 @@ func (m *GSMModem) Read(n int) []string {
 	for {
 		c, _ := m.Port.Read(buf)
 		if c > 0 {
-			log.Printf("--- Read(%d): %v", n, m.transposeLog(string(buf[:c])))
 			output = append(output, string(buf[:c]))
 		} else {
 			break
@@ -109,7 +117,7 @@ func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
 	m.Send(command)
 
 	if waitForOk {
-		output, _ := m.Expect([]string{"OK\r\n", "ERROR\r\n"}) // we will not change api so errors are ignored for now
+		output, _ := m.Expect([]string{"OK\r\n", "ERROR\r\n", "OK", "ERROR"}) // we will not change api so errors are ignored for now
 		return output
 	} else {
 		return m.Read(1)[0]
@@ -133,6 +141,10 @@ func (m *GSMModem) ReadSMSs() []string {
 	smsStr := m.Read(1024)
 	log.Println("--- Read All SMS end.")
 	return smsStr
+}
+
+func (m *GSMModem) DeleteSMS(id int) string {
+	return m.SendCommand(fmt.Sprintf("AT+CMGD=%d\r\n", id), true)
 }
 
 func (m *GSMModem) transposeLog(input string) string {

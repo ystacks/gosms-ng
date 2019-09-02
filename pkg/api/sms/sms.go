@@ -34,6 +34,7 @@ type SMS struct {
 func Routes() chi.Router {
 	router := chi.NewRouter()
 	router.Get("/", GetAllMessages)
+	router.Delete("/{id}", deleteMessage)
 	return router
 }
 
@@ -47,6 +48,19 @@ func init() {
 		panic(err)
 	}
 }
+
+func deleteMessage(w http.ResponseWriter, r *http.Request) {
+	var (
+		smsid, err = strconv.Atoi(chi.URLParam(r, "id"))
+	)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+	} else {
+		res := raspModem.DeleteSMS(smsid)
+		w.Write([]byte(res))
+	}
+}
+
 func GetAllMessages(w http.ResponseWriter, r *http.Request) {
 	var smss []SMS
 	var err error
@@ -80,7 +94,13 @@ func GetAllMessages(w http.ResponseWriter, r *http.Request) {
 		smss = append(smss, sms)
 	}
 
-	bdata, err := json.Marshal(smss)
+	smssData := struct {
+		SMSS []SMS `json:"smss"`
+	}{
+		SMSS: smss,
+	}
+
+	bdata, err := json.Marshal(smssData)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	} else {
