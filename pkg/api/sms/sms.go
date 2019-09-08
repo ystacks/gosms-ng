@@ -2,7 +2,7 @@
  * File              : sms.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 11.08.2019
- * Last Modified Date: 01.09.2019
+ * Last Modified Date: 08.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 package sms
@@ -19,8 +19,8 @@ import (
 )
 
 type SMS struct {
-	UUID      string `json:"uuid"`
-	CMGLID    int    `json:"cmgl_id"`
+	ID        string `json:"id"`
+	CMGLID    string `json:"cmgl_id"`
 	Mobile    string `json:"mobile"`
 	Body      string `json:"body"`
 	Status    int    `json:"status"`
@@ -83,7 +83,8 @@ func GetAllMessages(w http.ResponseWriter, r *http.Request) {
 		if len(headers) < 5 {
 			continue
 		}
-		sms.CMGLID, _ = strconv.Atoi(strings.Trim((strings.Split(headers[0], ":"))[1], " "))
+		sms.CMGLID = strings.Trim((strings.Split(headers[0], ":"))[1], " ")
+		sms.ID = sms.CMGLID
 		sms.Type = cleanStr(headers[1])
 		sms.Mobile = cleanStr(headers[2])
 		sms.CreatedAt = cleanStr(fmt.Sprintf("%s %s", headers[4], headers[5]))

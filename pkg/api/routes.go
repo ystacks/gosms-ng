@@ -2,7 +2,7 @@
  * File              : routes.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 11.08.2019
- * Last Modified Date: 01.09.2019
+ * Last Modified Date: 08.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 package api
@@ -10,12 +10,15 @@ package api
 import (
 	"context"
 	"net/http"
+	"text/template"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	. "github.com/jiangytcn/gosms-ng/dash"
 	. "github.com/jiangytcn/gosms-ng/logger"
 	"github.com/jiangytcn/gosms-ng/pkg/api/config"
+	"github.com/jiangytcn/gosms-ng/pkg/api/device"
 	"github.com/jiangytcn/gosms-ng/pkg/api/sms"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
@@ -34,7 +37,7 @@ func Routes() chi.Router {
 	cors := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -44,10 +47,31 @@ func Routes() chi.Router {
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Route("/api/v1", func(r chi.Router) {
+	htmlData, err := Asset("index.html")
+	if err != nil {
+		panic(err)
+		// Asset was not found.
+	}
+
+	tpl, _ := template.New("index").Parse(string(htmlData))
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		tpl.Execute(w, nil)
+	})
+
+	r.Get("/static/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//fs := http.StripPrefix("/static", http.FileServer(AssetFile()))
+		fs := http.FileServer(AssetFile())
+
+		fs.ServeHTTP(w, r)
+	}))
+
+	r.Route("/v1", func(r chi.Router) {
 		r.Use(apiVersionCtx("v1"))
-		r.Mount("/sms", sms.Routes())
+		r.Mount("/smss", sms.Routes())
 		r.Mount("/admin", config.Routes())
+		r.Mount("/devices", device.Routes())
 	})
 
 	walkFunc := func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
