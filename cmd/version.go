@@ -1,8 +1,8 @@
 /**
- * File              : server.go
+ * File              : version.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
- * Date              : 10.08.2019
- * Last Modified Date: 01.09.2019
+ * Date              : 08.09.2019
+ * Last Modified Date: 08.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 /*
@@ -23,22 +23,19 @@ limitations under the License.
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
 
-	. "github.com/jiangytcn/gosms-ng/logger"
-	"github.com/jiangytcn/gosms-ng/pkg/api"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
-// serverCmd represents the server command
-var serverCmd = &cobra.Command{
-	Use:   "server",
+var (
+	Version = ""
+	Vcs     = ""
+)
+
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -47,55 +44,21 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		r := api.Routes()
-
-		stopCh := make(chan struct{})
-
-		srv := &http.Server{
-			Addr:    fmt.Sprintf("0.0.0.0:%v", 18080),
-			Handler: r,
-		}
-
-		/*
-			var smsCtr controller.Controller
-			smsCtr = &modem.SMSController{}
-			go smsCtr.Run(stopCh, 10)
-		*/
-
-		go func() {
-			if err := srv.ListenAndServe(); err != nil {
-				Logger.Fatal("failed to start µ-service for gosms-ng", zap.Int("port", 8080))
-			}
-		}()
-
-		Logger.Info("µ-service for gosms-ng is running", zap.Int("port", 18080))
-
-		sig := make(chan os.Signal)
-		signal.Notify(sig, os.Interrupt)
-		<-sig
-
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(ctx); err != nil {
-			Logger.Warn(fmt.Sprintf("Server Shutdown: %#v", err))
-		} else {
-			stopCh <- struct{}{}
-			Logger.Info("Shutting down gosms-ng µ-service")
-		}
+		fmt.Println("Version: " + Version)
+		fmt.Println("Build Commit: " + Vcs)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(serverCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// serverCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// versionCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// serverCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
