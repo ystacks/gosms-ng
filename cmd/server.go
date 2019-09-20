@@ -2,7 +2,7 @@
  * File              : server.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 10.08.2019
- * Last Modified Date: 01.09.2019
+ * Last Modified Date: 20.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 /*
@@ -30,11 +30,17 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/bamzi/jobrunner"
 	. "github.com/jiangytcn/gosms-ng/logger"
+	"github.com/jiangytcn/gosms-ng/modem"
 	"github.com/jiangytcn/gosms-ng/pkg/api"
+	"github.com/jiangytcn/gosms-ng/pkg/controller/scheduler"
+	"github.com/jiangytcn/gosms-ng/pkg/notifier"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
+
+var raspModem *modem.GSMModem
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
@@ -57,6 +63,14 @@ to quickly create a Cobra application.`,
 			Handler: r,
 		}
 
+		notification := notifier.NewNotificationService()
+		go notification.Run()
+
+		jobrunner.Start()
+		jobrunner.Schedule("@every 10m", scheduler.ModemWorker{
+			Modem:        raspModem,
+			Notification: notification,
+		})
 		/*
 			var smsCtr controller.Controller
 			smsCtr = &modem.SMSController{}
@@ -88,6 +102,12 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
+	_port := "/dev/ttyS0"
+	_baud := 115200
+	raspModem = modem.New(_port, _baud, "mymodem")
+	if err := raspModem.Connect(); err != nil {
+		panic(err)
+	}
 
 	// Here you will define your flags and configuration settings.
 

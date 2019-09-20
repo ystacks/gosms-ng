@@ -3,6 +3,7 @@ module github.com/jiangytcn/gosms-ng
 go 1.12
 
 require (
+	github.com/bamzi/jobrunner v0.0.0-20190912144227-6e09e010a32d
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/gosimple/slug v1.7.0 // indirect
 	github.com/jiangytcn/serial v0.0.0-20180830185346-98f6abe2eb07

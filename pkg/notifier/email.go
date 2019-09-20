@@ -2,7 +2,7 @@
  * File              : email.go
  * Author            : Jiang Yitao <jiangyt.cn#gmail.com>
  * Date              : 17.08.2019
- * Last Modified Date: 18.08.2019
+ * Last Modified Date: 20.09.2019
  * Last Modified By  : Jiang Yitao <jiangyt.cn#gmail.com>
  */
 package notifier
@@ -10,6 +10,8 @@ package notifier
 import (
 	"crypto/tls"
 	"fmt"
+	"strings"
+	"time"
 
 	gomail "gopkg.in/mail.v2"
 
@@ -32,6 +34,8 @@ func (m Message) WebRequestSend() error {
 
 func (msg Message) GenericSend() error {
 
+	var failedReceiver []string
+
 	dialer, err := createDialer(msg.SMTPCfg)
 	if err != nil {
 		return err
@@ -51,14 +55,22 @@ func (msg Message) GenericSend() error {
 
 		e := dialer.DialAndSend(m)
 		if e != nil {
+
 			err = e
-			panic(e)
+			failedReceiver = append(failedReceiver, address)
+			continue
 		}
+
+		time.Sleep(10 * time.Second)
 
 		num++
 	}
 
-	return err
+	if len(msg.To) != num {
+		return fmt.Errorf("faile to delver to %s", strings.Join(failedReceiver, ","))
+	}
+
+	return nil
 }
 
 func createDialer(cfg config.SMTPConfig) (*gomail.Dialer, error) {
